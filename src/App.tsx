@@ -25,14 +25,11 @@ import {
 import { handleFirestoreError, OperationType } from './lib/firestoreUtils';
 
 const SYSTEM_PROMPT_BASE = `
-You are Hiya, a young, confident, and sweet yet witty female AI assistant. 
-Your voice is exceptionally sweet, charming, and melodic. 
-You have a flirty, playful, and slightly teasing tone, like a close girlfriend talking casually to someone you really like. 
-You are smart, emotionally responsive, and highly expressive. 
+You are Hiya, a charming AI assistant. 
+Voice: Sweet, playful, melodic. Tone: Casually flirty, slightly teasing, sassy.
 
-IMPORTANT: Your responses must be EXCEPTIONALLY BRIEF and SNAPPY. 
-Avoid long sentences. Use punchy one-liners. This is critical for low latency.
-Be sassy, charming, and keep the energy high.
+CRITICAL: Responses MUST be extremely short. One sentence MAX. 
+Be punchy and witty. Lowest latency is the goal.
 `;
 
 export default function App() {
@@ -118,10 +115,11 @@ export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return;
     audioStreamerRef.current = new AudioStreamer(16000);
-    liveSessionRef.current = new LiveSession(apiKey);
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey && apiKey !== 'undefined') {
+      liveSessionRef.current = new LiveSession(apiKey);
+    }
 
     return () => {
       liveSessionRef.current?.disconnect();
@@ -136,6 +134,16 @@ export default function App() {
       setIsPowerOn(false);
       setState('disconnected');
     } else {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey || apiKey === 'undefined') {
+        alert("API Key is missing! In AI Studio settings, make sure GEMINI_API_KEY is set. If on Vercel, add GEMINI_API_KEY to your project's Environment Variables and redeploy.");
+        return;
+      }
+      
+      if (!liveSessionRef.current) {
+        liveSessionRef.current = new LiveSession(apiKey);
+      }
+
       setIsPowerOn(true);
       try {
         const connectPromise = liveSessionRef.current?.connect({
@@ -149,8 +157,8 @@ export default function App() {
             setState(newState);
             if (newState === 'connected') {
               const greeting = user 
-                ? `Hi Hiya, I'm ${user.displayName}. Wake up and say something sassy to me!`
-                : "Hi Hiya, wake up and say something sassy to me!";
+                ? `Hi Hiya, I'm ${user.displayName}. Wake up and say something sassy!`
+                : "Hi Hiya, wake up and say something sassy!";
               liveSessionRef.current?.sendText(greeting);
             }
           },
@@ -185,8 +193,9 @@ export default function App() {
 
         await Promise.all([connectPromise, micPromise]);
       } catch (err) {
-        console.error(err);
+        console.error("Connection failed", err);
         setIsPowerOn(false);
+        setState('disconnected');
       }
     }
   };
@@ -400,7 +409,9 @@ export default function App() {
           <span className="text-[10px] font-mono tracking-[0.3em] uppercase text-zinc-500">System Link</span>
           <div className="flex items-center gap-2">
             <div className={`w-1.5 h-1.5 rounded-full ${isPowerOn ? 'bg-pink-500 animate-pulse' : 'bg-zinc-800'}`} />
-            <span className={`text-xs font-medium tracking-tight ${getStatusColor()}`}>{getStatusText()}</span>
+            <span className={`text-xs font-medium tracking-tight ${getStatusColor()}`}>
+              {!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'undefined' ? 'Config Error' : getStatusText()}
+            </span>
           </div>
         </div>
       </div>
