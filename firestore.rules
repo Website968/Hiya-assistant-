@@ -1,0 +1,62 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper Functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation Blueprints
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['displayName']) &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             (!data.keys().hasAny(['preferences']) || (
+               data.preferences is map &&
+               (!data.preferences.keys().hasAny(['personality']) || data.preferences.personality is string) &&
+               (!data.preferences.keys().hasAny(['voice']) || data.preferences.voice is string)
+             ));
+    }
+
+    function isValidChatTurn(data) {
+      return data.keys().hasAll(['role', 'text', 'timestamp']) &&
+             data.role in ['user', 'model'] &&
+             data.text is string && data.text.size() <= 5000 &&
+             data.timestamp is timestamp;
+    }
+
+    // Collection Assignments
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUserProfile(incoming());
+      allow update: if isOwner(userId) && isValidUserProfile(incoming()) && (
+        incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'preferences', 'lastSeen'])
+      );
+
+      match /history/{turnId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidId(turnId) && isValidChatTurn(incoming());
+      }
+    }
+  }
+}

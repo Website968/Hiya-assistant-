@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user preferences and basic metadata.",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "personality": { "type": "string" },
+            "voice": { "type": "string" }
+          }
+        },
+        "lastSeen": { "type": "string", "format": "date-time" }
+      },
+      "required": ["displayName"]
+    },
+    "PreferenceUpdate": {
+      "title": "Preference Update",
+      "description": "Payload for updating user preferences.",
+      "type": "object",
+      "properties": {
+        "personality": { "type": "string" },
+        "voice": { "type": "string" }
+      }
+    },
+    "ChatTurn": {
+      "title": "Chat Turn",
+      "description": "Represents a single exchange in a conversation.",
+      "type": "object",
+      "properties": {
+        "role": { "type": "string", "enum": ["user", "model"] },
+        "text": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["role", "text", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "Individual user profiles and settings."
+    },
+    "/users/{userId}/history/{turnId}": {
+      "schema": "ChatTurn",
+      "description": "Historical turns of the conversation for the user."
+    }
+  }
+}

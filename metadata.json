@@ -1,0 +1,6 @@
+{
+  "name": "Hiya Assistant",
+  "description": "A real-time, witty, and sassy voice-to-voice AI assistant named Hiya, now with persistent memory for preferences and past conversations.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["voice_interaction"]
+}
