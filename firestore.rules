@@ -31,6 +31,7 @@ service cloud.firestore {
     function isValidUserProfile(data) {
       return data.keys().hasAll(['displayName']) &&
              data.displayName is string && data.displayName.size() <= 100 &&
+             (!data.keys().hasAny(['lastSeen']) || data.lastSeen is timestamp) &&
              (!data.keys().hasAny(['preferences']) || (
                data.preferences is map &&
                (!data.preferences.keys().hasAny(['personality']) || data.preferences.personality is string) &&

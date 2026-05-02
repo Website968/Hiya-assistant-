@@ -63,6 +63,19 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async () => {
+    setIsLoggingIn(true);
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      console.error("Manual login handle fail:", error);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
   const loadUserData = async (uid: string) => {
     try {
       const userRef = doc(db, 'users', uid);
@@ -417,10 +430,11 @@ export default function App() {
           </motion.div>
         ) : (
           <button 
-            onClick={loginWithGoogle}
-            className="px-4 py-2 rounded-lg glass-panel text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-all"
+            onClick={handleLogin}
+            disabled={isLoggingIn}
+            className="px-4 py-2 rounded-lg glass-panel text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-all disabled:opacity-50"
           >
-            Login
+            {isLoggingIn ? 'Connecting...' : 'Login'}
           </button>
         )}
         <button 
