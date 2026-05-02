@@ -28,9 +28,8 @@ export class AudioStreamer {
     this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     this.source = this.audioContext.createMediaStreamSource(this.micStream);
     
-    // Using ScriptProcessorNode for simplicity in this environment, 
-    // though AudioWorklet is preferred in modern apps.
-    this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+    // Using ScriptProcessorNode with 2048 buffer for lower latency
+    this.processor = this.audioContext.createScriptProcessor(2048, 1, 1);
 
     this.processor.onaudioprocess = (e) => {
       const inputData = e.inputBuffer.getChannelData(0);

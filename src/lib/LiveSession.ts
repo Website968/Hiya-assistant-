@@ -33,7 +33,7 @@ export class LiveSession {
         });
         
         this.session = await ai.live.connect({
-          model: "gemini-3.1-flash-live-preview",
+          model: "gemini-2.0-flash-lite-preview-02-05",
           config: {
             systemInstruction: systemInstruction,
             responseModalities: [Modality.AUDIO],
